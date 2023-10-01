@@ -39,7 +39,7 @@ namespace E_Exam.Services
                 return null;
 
             var exam = await _context.exams
-                .Where(e => e.SubjectId == subjectId && e.IsOpenForStudent)
+                .Where(e => e.SubjectId == subjectId)
                 .Select(e => new
                 {
                     e.Id,
@@ -61,7 +61,7 @@ namespace E_Exam.Services
             if (Subject == null)
                 return null;
             var exams = await _context.exams
-                .Where(e => e.SubjectId == Subject.Id && e.IsOpenForStudent == true)
+                .Where(e => e.SubjectId == Subject.Id)
                 .Include(e => e.questions)
                 .ThenInclude(e => e.answersModels)
                 .ToListAsync();
@@ -75,7 +75,6 @@ namespace E_Exam.Services
                 Grade = e.Grade, 
                 QuestionsCount = e.QuestionsCount, 
                 ExamScore = e.ExamScore, 
-                IsOpenForStudent = e.IsOpenForStudent, 
                 questions = e.questions.Select(q => new Questions
                 {
                     id = q.id,

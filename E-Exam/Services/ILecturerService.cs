@@ -6,10 +6,7 @@ namespace E_Exam.Services
 {
     public interface ILecturerService
     {
-        public Task<Exam> AddExam(Exam exams, int subID);
-        public Task<Questions> AddQuestions(Questions questions);
-        public Task<AnswersModel> AddAnswers(AnswersModel answers);
-        public Questions GetQuestions(int questionsID);
+        public Task<Exam> AddExam(Exam exams, int subjectId, List<Questions> questions);
         public Exam GetExam(int ExamId);
         public Task<IEnumerable<Exam>> GetAllexams();
         public Task<Exam> CalculteTotalScore(int examID);

@@ -18,82 +18,76 @@ namespace E_Exam.Controllers
             _lecturerService = laurerService;
         }
 
-        [HttpPost("AddExam")]
-        public async Task<IActionResult> AddExam(ExamDto examDto)
+        [HttpPost("SubjectID/{SubjectID}/AddExam")]
+        public async Task<IActionResult> AddExam([FromBody] ExamCreationRequest request, int SubjectID)
         {
-            if (examDto.Name.IsNullOrEmpty() || examDto.Description.IsNullOrEmpty())            
+            if (request.Exam.Name.IsNullOrEmpty() || request.Exam.Description.IsNullOrEmpty())
                 return BadRequest("One or more fields are missing");
 
-            var subject = await _lecturerService.GetSubject(examDto.SubjectId);
-            
-            if (subject == null)            
-                return NotFound("Subjetc Not Found");
-            
+            var subject = await _lecturerService.GetSubject(SubjectID);
+
+            if (subject == null)
+                return NotFound("Subject Not Found");
+
             var subjectName = subject.Name;
-            var subjecGrade = subject.Grade;
+            var subjectGrade = subject.Grade;
 
             var exam = new Exam
             {
-                Name = examDto.Name,
-                Description = examDto.Description,
-                SubjectId = examDto.SubjectId,
+                Name = request.Exam.Name,
+                Description = request.Exam.Description,
+                SubjectId = SubjectID,
                 SubjectName = subjectName,
-                Grade = subjecGrade,
-
+                Grade = subjectGrade,
+                questions = new List<Questions>(),
+                start = request.Exam.Start, 
+                end = request.Exam.End,
+                duration = request.Exam.Duration,
+                
             };
-  
-            var result = await _lecturerService.AddExam(exam,exam.SubjectId);
-            if (result is null)
-            {
-                return BadRequest("You cannot add exams to this subject");
-            }
-            return Ok(result);
-   
-        }
-
-        [HttpPost("{examId}/questions")]
-        public async Task<IActionResult> AddQuestions(int examId,QuestionsDto questionsDto)
-        {
-            var exam = _lecturerService.GetExam(examId);
-            if (exam == null)
-                return NotFound("Exam ID is not found");
-
-            if (questionsDto.Question.IsNullOrEmpty())
-                return BadRequest("Question Text is required");
-
-            var ques = new Questions
-            {
-                ExamID = examId,
-                Question = questionsDto.Question,
-                Score = questionsDto.Score,
-            };
-
-            var result = await _lecturerService.AddQuestions(ques);
-            await _lecturerService.CalculteTotalScore(result.ExamID);
-
-            return Ok(result);
-
-        }
-
-        [HttpPost("{examId}/questions/{questionId}/answers")]
-        public async Task<IActionResult> AddAnswer(int examId, int questionId, AnswersDto answersDto)
-        {
-            var question = _lecturerService.GetQuestions(questionId);
-            if (question == null)            
-                return NotFound("Question ID is not found");
-            if (answersDto.Answer.IsNullOrEmpty())           
-                return BadRequest("Answer Text is required");            
             
-            var answer = new AnswersModel
+            foreach (var questionDto in request.Questions)
             {
-                Questionsid = questionId,
-                Text = answersDto.Answer,
-                CorrectAnswer = answersDto.CorrectAnswer,
-            };
+                var ques = new Questions
+                {
+                    Question = questionDto.Question,
+                    Score = questionDto.Score,
+                    answersModels = new List<AnswersModel>() 
 
-            var result = await _lecturerService.AddAnswers(answer);
+                };
+
+                if (request.Questions == null || request.Questions.Count == 0)
+                    return BadRequest("You must provide at least one question for the exam.");
+
+                foreach (var AnswerDto in questionDto.Answers) 
+                {
+                    var answer = new AnswersModel
+                    {
+                        Questionsid = ques.id,
+                        Text = AnswerDto.Answer,
+                    };
+
+                    ques.answersModels.Add(answer);
+                }
+
+                if (ques.answersModels.Count == 0)                
+                    return BadRequest("You cannot add questions with empty answers.");
+                
+                exam.questions.Add(ques);
+                exam.QuestionsCount++;
+            }
+
+            if (request.Questions == null)
+                return BadRequest("You Couldn't Add Empty exam!");
+            
+            var result = await _lecturerService.AddExam(exam, SubjectID, exam.questions);
+
+            if (result is null)           
+                return BadRequest("You cannot add exams to this subject");
+
             return Ok(result);
         }
+
 
         [HttpGet("AllExams")]
         public async Task<IActionResult> GetAllexams()
@@ -103,7 +97,5 @@ namespace E_Exam.Controllers
                 return NotFound("No Exams Found");
             return Ok(Exmas);
         }
-
-
     }
 }

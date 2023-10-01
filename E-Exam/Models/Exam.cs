@@ -16,7 +16,12 @@ namespace E_Exam.Models
         public int QuestionsCount { get; set; }
         public int ExamScore { get; set; }
         public List<Questions> questions { get; set; }
-        public bool IsOpenForStudent { get; set; }
+
+        public DateTime start { get; set; }
+        public DateTime end { get; set; }
+
+        public decimal duration { get; set; }
+
 
     }
 }

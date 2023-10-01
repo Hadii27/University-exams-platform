@@ -25,66 +25,45 @@ namespace E_Exam.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<Exam> AddExam(Exam exams, int subID)
+        public async Task<Exam> AddExam(Exam exams, int subjectID, List<Questions> questions)
         {
-            //var cuurrentUser = GetCurrentUserId();
-            //var LecSub = await _context.lecturers
-            //.Where(u => u.SubjectId == subID && cuurrentUser == u.UserID)
-            //.SingleOrDefaultAsync();
-            //if (LecSub is null)
-            //{
-            //    return null;
-            //}
+            var sub = await _context.subject.FindAsync(subjectID);
+            if (sub == null)
+                return null;
+            int totalScore = questions.Sum(q => q.Score);
             var exam = new Exam
             {
                 Name = exams.Name,
                 Description = exams.Description,
                 SubjectId = exams.SubjectId,
-                ExamScore = exams.ExamScore,
+                ExamScore = totalScore,
                 SubjectName = exams.SubjectName,
                 Grade = exams.Grade,
-                IsOpenForStudent = false,
+                questions = questions,
+                QuestionsCount = exams.QuestionsCount,
+                start = exams.start,
+                end = exams.end,
+                duration = exams.duration,                          
             };
 
-            var result  = _context.exams.Add(exam);
-            await _context.SaveChangesAsync();            
+            foreach (var question in questions)
+            {
+                var answers = new List<AnswersModel>();
+                foreach (var ans in question.answersModels)
+                {
+                    var answer = new AnswersModel
+                    {
+                        Text = ans.Text,
+                        Questionsid = question.id,
+                    };
+                    answers.Add(answer);
+                }
+                question.answersModels.AddRange(answers);
+            }
+
+            var result = _context.exams.Add(exam);
+            await _context.SaveChangesAsync();
             return exam;
-        }
-
-
-        public async Task<Questions> AddQuestions(Questions questions)
-        {
-            var ques = new Questions
-            {
-                ExamID = questions.ExamID,
-                Question = questions.Question,
-                Score = questions.Score,
-            };
-
-            var result = _context.questions.Add(ques);
-            await IncrementQuestionsCount(ques.ExamID);
-            await _context.SaveChangesAsync();
-            return ques;
-        }
-
-        public async Task<AnswersModel> AddAnswers(AnswersModel answers)
-        {
-           
-            var answer = new AnswersModel
-            {
-                Questionsid = answers.Questionsid,
-                Text = answers.Text,
-                CorrectAnswer = answers.CorrectAnswer,
-            };
-
-            var result = _context.answers.Add(answer);
-            await _context.SaveChangesAsync();
-            return answer;
-        }
-        public Questions GetQuestions(int questionsID)
-        {
-            var questions = _context.questions.Find(questionsID);
-            return questions;
         }
 
         public Exam GetExam(int ExamId)
@@ -121,6 +100,7 @@ namespace E_Exam.Services
             await _context.SaveChangesAsync();
             return Exam;
         }
+
 
         public async Task<SubjectModel> GetSubject(int SubjectId)
         {

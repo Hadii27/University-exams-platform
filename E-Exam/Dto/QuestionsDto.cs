@@ -6,5 +6,7 @@ namespace E_Exam.Dto
     {
         public string Question { get; set; }
         public int Score { get; set; }
+
+        public List<AnswersDto> Answers { get; set; }
     }
 }
