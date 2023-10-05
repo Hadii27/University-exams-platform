@@ -30,6 +30,28 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
+        [HttpPost("{StudentId}/subjects")]
+        public async Task<IActionResult> AddStudentSub([FromRoute] string StudentId, IEnumerable<int> SubIDs)
+        {
+            var result = await _studentService.StudentsSubjects(StudentId, SubIDs);
+            if (result == null)
+            {
+                return NotFound("Student not found");
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("{StudentId}/ChoosedSubjects")]
+        public async Task<IActionResult> GetChoosedSubjects([FromRoute] string StudentId)
+        {
+            var result = await _studentService.GetChoosedSubjects(StudentId);
+            if (result == null)
+            {
+                return NotFound("Student not found");
+            }
+            return Ok(result);
+        }
+
 
         [HttpGet("{StudentId}/subjects/{SubjectId}/ExamsName")]
         public async Task<IActionResult> GetExamInfo([FromRoute] string StudentId, [FromRoute] int SubjectId)

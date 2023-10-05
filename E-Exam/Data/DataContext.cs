@@ -30,5 +30,7 @@ namespace E_Exam.Data
 
         public DbSet<ChoosenAnswers> choosenAnswers { get; set; }
 
+        public DbSet<ChooseSubjects> chooseSubjects { get; set; }
+
     }
 }
