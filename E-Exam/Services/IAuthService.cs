@@ -7,5 +7,9 @@ namespace E_Exam.Services
         public Task<AuthModel> RegisterAsync(RegisterModel model);
         public Task<AuthModel> GetToken(TokenRequestModel model);
         public Task<string> AddRole(AddRoleModel model);
+        public Task<string> ReqRegister(ReqRegister model);
+        public Task<IEnumerable<ReqRegister>> getRequests();
+
+
     }
 }

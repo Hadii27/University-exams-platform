@@ -3,6 +3,7 @@ using E_Exam.Dto;
 using E_Exam.Migrations;
 using E_Exam.Models;
 using E_Exam.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +22,8 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("AddFaculty")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> CreateFaculty(FacultyDto dto)
         {
             if (!ModelState.IsValid)
@@ -47,6 +50,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("AddDepartmentsToFaculty")]
+
         public async Task<IActionResult> AddDepartments(int id, DepartmentDto dto)
         {
             if (!ModelState.IsValid)
@@ -79,6 +83,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("AddSubject")]
+
         public async Task<IActionResult> AddSubject(SubjectDto dto, int DepartmentID)
         {
             if (!ModelState.IsValid)
@@ -111,6 +116,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("AssignSubjectToLecturer")]
+
         public async Task<IActionResult> AssignSubjectToLecturer(string UserID, int SubID)
         {
             var lecturer = await _adminServices.GetUserByID(UserID);
@@ -138,6 +144,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpGet("AllSubjects")]
+
         public async Task<IActionResult> GettAllSubjects()
         {
             var result = await _adminServices.GetAllSubjects();
@@ -145,6 +152,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpGet("AllDepartments")]
+
         public async Task<IActionResult> GetAllDepartments()
         {
             var result = await _adminServices.GetAllDepartments();
@@ -158,13 +166,17 @@ namespace E_Exam.Controllers
             var user = await _adminServices.GetUserByID(student.UserId);
             if (user is null || DepartmentID is null)
                 return NotFound("Invalid UserID Or DepartmentID");
+
             var Student = new StudentModel
             {
                 UserId = student.UserId,
                 DepartmentId = student.DepartmentId,    
                 Grade = student.Grade,
+                internationalID = student.internationalID
             };
             var result = await _adminServices.AssignStudent(Student);
+            if (result is null)
+                return BadRequest("International ID is already exist");
             return Ok(result);
         }
     }

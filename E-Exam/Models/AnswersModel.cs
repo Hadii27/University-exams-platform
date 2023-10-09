@@ -9,6 +9,5 @@ namespace E_Exam.Models
         [JsonIgnore]
         public Questions Questions { get; set; }
         public string Text { get; set; }
-        public bool CorrectAnswer { get; set; }
     }
 }

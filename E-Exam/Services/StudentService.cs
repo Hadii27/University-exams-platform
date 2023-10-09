@@ -32,32 +32,40 @@ namespace E_Exam.Services
             return subject;
         }
 
-        public async Task<IEnumerable<ChooseSubjects>> StudentsSubjects(string StudentId, IEnumerable<int> SubIDs)
+        public async Task<string> StudentsSubjects(string StudentId, IEnumerable<ChooseSubjects> SubIDs)
         {
             var addedSubjects = new List<ChooseSubjects>();
-            foreach (int SubID in SubIDs)
+            var subjectNames = new List<string>();
+
+            foreach (var choosedSubject in SubIDs)
             {
-                var sub = await _context.subject.FindAsync(SubID);
+                var sub = await _context.subject.FindAsync(choosedSubject.SubjectId);
                 if (sub is null)
                 {
                     return null;
                 }
+                var exist = await _context.chooseSubjects.Where(u => u.UserId == StudentId && sub.Id == u.SubjectId).FirstOrDefaultAsync();
+                if (exist is not null)
+                    return $"You have been choosed it before";
 
                 var choosed = new ChooseSubjects
                 {
                     SubjectId = sub.Id,
                     UserId = StudentId,
                     grade = sub.Grade,
-                    
                 };
 
                 var result = await _context.chooseSubjects.AddAsync(choosed);
                 addedSubjects.Add(result.Entity);
+
+                subjectNames.Add(sub.Name); 
             }
 
             await _context.SaveChangesAsync();
 
-            return addedSubjects;
+            string subjectNamesStr = string.Join(", ", subjectNames); 
+
+            return $"You have chosen the following subjects: {subjectNamesStr}";
         }
 
         public async Task<IEnumerable<ChooseSubjects>> GetChoosedSubjects(string studentID)
@@ -69,8 +77,6 @@ namespace E_Exam.Services
             var studentSub = await _context.chooseSubjects.Where(s => s.UserId == studentID && s.grade == studentGrade).ToListAsync();
             return studentSub;
         }
-
-
 
         public async Task<object> GetExamInfo(string studentId, int subjectId)
         {
@@ -137,45 +143,72 @@ namespace E_Exam.Services
             }).ToList();
 
             return examList;
-
         }
 
-        public async Task<Models.ChoosenAnswers> ChooseAnswer(string UserId , int examID,int QuestionID,int AnswerID)
+        public async Task<string> ExamSubmit(int ExamID, string UserId, IEnumerable<AnswersModel> AnswerIDs)
         {
-            var exam = await _context.exams.FindAsync(examID);
+            var exam = await _context.exams.FindAsync(ExamID);
             if (exam == null)
-                return null;
+                return "Inavlid exam";
+            var choosenAnswers = new List<Models.ChoosenAnswers>();
+            int totalScore = 0;
 
-            var ques = await _context.questions.Where(q => q.ExamID == examID && q.id == QuestionID).FirstOrDefaultAsync();
-            if (ques == null)
-                return null;
-
-            var answer = await _context.answers.Where(a => a.Questionsid == QuestionID && a.Id == AnswerID).FirstOrDefaultAsync();
-            if (answer == null)
-                return null;
-
-            var choosen = new Models.ChoosenAnswers
+            var CheckSubmit = await _context.submitedExams.Where(x => x.UserId == UserId && x.ExamID == ExamID).FirstOrDefaultAsync();
+            if (CheckSubmit is not null)           
+                return "U have been submit this exam before";
+            
+            foreach (var AnswerID in AnswerIDs)
             {
-                userId = UserId,
-                questionsId = QuestionID,
-                answerId = AnswerID,
-                ExamID = examID,
-            };
+                var answer = await _context.answers.FindAsync(AnswerID.Id);
+                if (answer == null)
+                    return "Invalid answer";
 
-            if (!answer.CorrectAnswer)            
-                choosen.QuestionScore = 0;
-            
-            else            
-                choosen.QuestionScore = ques.Score;
-            
-            _context.choosenAnswers.Add(choosen);
+                var checkAns = await _context.choosenAnswers.Where(c => c.userId == UserId && c.answerId == AnswerID.Id).FirstOrDefaultAsync();
+                if (checkAns is not null)
+                    return "U already choosed it";
+
+                var ques = await _context.answers
+                    .Include(q => q.Questions)
+                    .Where(q => q.Questionsid == answer.Questionsid)
+                    .FirstOrDefaultAsync();
+                if (ques == null)
+                    continue;
+
+                var choosen = new Models.ChoosenAnswers
+                {
+                    userId = UserId,
+                    questionsId = ques.Questionsid,
+                    answerId = AnswerID.Id,
+                    ExamID = ExamID,
+                };
+
+
+                if (ques.Questions.correctAnswer == answer.Text)
+                {
+                    totalScore += ques.Questions.Score; 
+                }
+                _context.choosenAnswers.Add(choosen);
+
+                choosenAnswers.Add(choosen);
+            }
+
+            var submit = new SubmitedExams
+            {
+                ExamID = exam.Id,
+                UserId = UserId,
+                SubjectName = exam.SubjectName,
+                dateTime = DateTime.Now,
+                Score = totalScore
+            };
+            _context.submitedExams.Add(submit);
+
             await _context.SaveChangesAsync();
-            return choosen;
+            return (submit.Score).ToString();
         }
 
         public string GetCurrentStudent()
         {
-            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue("UserId");
             return userIdClaim;
         }
 
@@ -185,5 +218,6 @@ namespace E_Exam.Services
             return exam;
         }
 
+  
     }
 }

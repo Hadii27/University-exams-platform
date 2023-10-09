@@ -7,10 +7,11 @@ namespace E_Exam.Services
     {
         public Task<IEnumerable<Exam>> GetExamsOfSubject(string StudentID, int SubjectID, int ExamID);
         public Task<IEnumerable<SubjectDepartmentModel>> GetSubjects(string StudentID);
-        public Task<Models.ChoosenAnswers> ChooseAnswer(string UserId, int examID, int QuestionID, int AnswerID);
+        public Task<string> ExamSubmit(int ExamID, string UserId, IEnumerable<AnswersModel> AnswerIDs);
         public Task<object> GetExamInfo(string studentId, int subjectId);
-        public Task<IEnumerable<ChooseSubjects>> StudentsSubjects(string StudentId, IEnumerable<int> SubIDs);
+        public Task<string> StudentsSubjects(string StudentId, IEnumerable<ChooseSubjects> SubIDs);
         public Task<IEnumerable<ChooseSubjects>> GetChoosedSubjects(string studentID);
+        public string GetCurrentStudent();
 
 
 

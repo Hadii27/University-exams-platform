@@ -10,7 +10,7 @@ namespace E_Exam.Models
         public Exam exam { get; set; }
         public string Question { get; set; }
         public int Score { get; set; }
-
+        public string correctAnswer { get; set; }
         public List<AnswersModel> answersModels { get; set; }
     }
 }

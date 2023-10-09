@@ -151,6 +151,9 @@ namespace E_Exam.Services
             var departmentName = department.Name;
             var username = user.UserName;
             var faculty = await GetFacultyByID(department.FacultyId);
+            var nationalID = await _context.reqRegisters.Where(i => i.internationalID == student.internationalID).FirstOrDefaultAsync();
+            if (nationalID is not null)
+                return null;
             var Student = new StudentModel
             {
                 UserId = student.UserId,
@@ -159,12 +162,30 @@ namespace E_Exam.Services
                 DepartmentId = student.DepartmentId,
                 DepartmentName = departmentName,
                 Grade = student.Grade,
+                internationalID = student.internationalID,
             };
             _context.students.Add(Student);
             await _context.SaveChangesAsync();
-
+            await ChangeStatusOfReq(Student.internationalID);
             return Student;
         }
+
+
+        public async Task<string> ChangeStatusOfReq(int internationalID)
+        {
+            var request = await _context.reqRegisters.FirstOrDefaultAsync(i => i.internationalID == internationalID);
+
+            if (request == null)           
+                return "Request not found"; 
+                        
+            request.status = "Success"; 
+
+            _context.Update(request);
+            await _context.SaveChangesAsync();
+
+            return "Register succeeded";
+        }
+
 
     }
 }

@@ -32,5 +32,6 @@ namespace E_Exam.Data
 
         public DbSet<ChooseSubjects> chooseSubjects { get; set; }
 
+        public DbSet<ReqRegister> reqRegisters { get; set; }
     }
 }

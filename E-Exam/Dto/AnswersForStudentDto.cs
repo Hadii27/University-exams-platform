@@ -2,5 +2,6 @@
 {
     public class AnswersForStudentDto
     {
+        public int answerID { get; set; }
     }
 }

@@ -52,8 +52,9 @@ namespace E_Exam.Controllers
                 {
                     Question = questionDto.Question,
                     Score = questionDto.Score,
+                    correctAnswer = questionDto.CorrectAnswer,
                     answersModels = new List<AnswersModel>() 
-
+                    
                 };
 
                 if (request.Questions == null || request.Questions.Count == 0)

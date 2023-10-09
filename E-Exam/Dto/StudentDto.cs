@@ -7,6 +7,8 @@ namespace E_Exam.Dto
     {
         public string UserId { get; set; }
         public int DepartmentId { get; set; }
+        public int internationalID { get; set; }
+
         public int Grade { get; set; }
     }
 }

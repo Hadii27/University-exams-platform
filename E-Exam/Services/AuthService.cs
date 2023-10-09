@@ -1,7 +1,10 @@
-﻿using E_Exam.Helpers;
+﻿using E_Exam.Data;
+using E_Exam.Dto;
+using E_Exam.Helpers;
 using E_Exam.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,11 +20,46 @@ namespace E_Exam.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly jwt _jwt;
-        public AuthService (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IOptions<jwt> jwt)
+        private readonly DataContext _context;
+
+        public AuthService (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IOptions<jwt> jwt, DataContext dataContext)
         {
             _roleManager = roleManager;
             _userManager = userManager;
             _jwt = jwt.Value;
+            _context = dataContext;
+        }
+
+        public async Task<string> ReqRegister(ReqRegister model)
+        {
+            var existingUser = await _context.reqRegisters.FirstOrDefaultAsync(u => u.Email == model.Email || u.Username == model.Username);
+            var nationalID = await _context.reqRegisters.Where(i => i.internationalID == model.internationalID).FirstOrDefaultAsync();
+            if (nationalID is not null)
+                return "This international ID is already exist";
+            if (existingUser != null)            
+                return "This Email or Username is already in use.";
+            
+            var Request = new ReqRegister
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Username = model.Username,
+                Email = model.Email,
+                internationalID = model.internationalID,
+                PhoneNumber = model.PhoneNumber,
+                role = model.role,
+                status = "Pending",
+            };
+
+            await _context.reqRegisters.AddAsync(Request);
+            await _context.SaveChangesAsync();
+            return $"Your request has been succesfully and the request id is {Request.id}";
+        }
+
+        public async Task<IEnumerable<ReqRegister>> getRequests()
+        {
+            var request = await _context.reqRegisters.Where(r => r.status == "Pending").ToListAsync();
+            return request;
         }
 
         public async Task<AuthModel> RegisterAsync(RegisterModel model)
@@ -30,6 +68,7 @@ namespace E_Exam.Services
                 return new AuthModel { Message = "Email Is Already Exist" };
             if (await _userManager.FindByNameAsync(model.Username) is not null)
                 return new AuthModel { Message = "Username Is already exist" };
+
             var user = new ApplicationUser
             {
                 UserName = model.Username,
@@ -80,6 +119,7 @@ namespace E_Exam.Services
                 authModel.Message = "Email Or Password Is invalid";
                 return authModel;
             }
+
             var jwtSecurityToken = await CreateJwtTokenAsync(user);
             var roleList = await _userManager.GetRolesAsync(user);
             var userData = new UserDataModel
@@ -154,6 +194,7 @@ namespace E_Exam.Services
             return JwtSecurityToken;
         }
 
-    
+ 
+
     }
 }
