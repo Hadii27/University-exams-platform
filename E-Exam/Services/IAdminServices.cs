@@ -4,9 +4,8 @@ namespace E_Exam.Services
 {
     public interface IAdminServices
     {
-        public Task<FacultyModel> AddFaculty(FacultyModel model);
 
-        public Task<Departments> AddDepartmentToFaculty(int facultyId, Departments model);
+        public  Task<Departments> AddDepartmentToFaculty(string AdminID, Departments model);
 
         public Task<SubjectModel> AddSubject(SubjectModel subject, int departmentID);
 
@@ -24,12 +23,13 @@ namespace E_Exam.Services
         public Task<string> DeleteLecturer(string userID);
 
         public Task<List<SubjectModel>> GetAllSubjects();
-        public Task<List<Departments>> GetAllDepartments();
+        public Task<List<Departments>> GetAllDepartments(string AdminID);
 
         public Task<List<FacultyModel>> GettAllFaculties();
 
         public Task<StudentModel> AssignStudent(StudentModel student);
 
+        public string GetCurrentAdmin();
 
 
     };

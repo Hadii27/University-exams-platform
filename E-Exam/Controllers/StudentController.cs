@@ -24,7 +24,9 @@ namespace E_Exam.Controllers
         {
             _studentService = studentService;
         }
+
         [HttpGet("Subjects")]
+        [Authorize(Roles ="Student")]
         public async Task<IActionResult> GetSubjects()
         {
             var student = _studentService.GetCurrentStudent();
@@ -38,7 +40,9 @@ namespace E_Exam.Controllers
             }
             return Ok(result);
         }
+
         [HttpPost("ChooseSubjects")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> AddStudentSub( IEnumerable<ChoosedSubjectDto> SubIDs)
         {
             var student = _studentService.GetCurrentStudent();
@@ -62,7 +66,9 @@ namespace E_Exam.Controllers
             }
             return Ok(result);
         }
+
         [HttpGet("ChoosedSubjects")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetChoosedSubjects()
         {
             var student = _studentService.GetCurrentStudent();
@@ -79,6 +85,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpGet("subjects/{SubjectId}/ExamsName")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetExamInfo([FromRoute] int SubjectId)
         {
             var student = _studentService.GetCurrentStudent();
@@ -91,7 +98,9 @@ namespace E_Exam.Controllers
                 return NotFound("No Exams Found!");
             return Ok(result);
         }
+
         [HttpGet("/subjects/{SubjectId}/exams/{ExamID}")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetExams([FromRoute] int SubjectId, [FromRoute] int ExamID)
         {
             var student = _studentService.GetCurrentStudent();
@@ -107,6 +116,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("Exam/{ExamID}/Answer")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> ChooseAnswer(int ExamID, [FromBody] IEnumerable<AnswersForStudentDto> AnswerID)
         {
             var student = _studentService.GetCurrentStudent();

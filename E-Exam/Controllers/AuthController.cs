@@ -49,6 +49,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("Register")]
+        [Authorize(Roles = "Master,Admin")]
         public async Task<IActionResult> RegisterAsync([FromBody]RegisterModel model)
         {
             if (!ModelState.IsValid)
@@ -71,7 +72,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("AddRole")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Master,Admin")]
         public async Task<IActionResult> AddRoleAsync([FromBody] AddRoleModel model)
         {
             if (!ModelState.IsValid)

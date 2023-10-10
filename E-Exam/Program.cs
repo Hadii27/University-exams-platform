@@ -53,7 +53,7 @@ builder.Services.AddCors();
 builder.Services.AddScoped<IAdminServices, AdminService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IStudentService, StudentService>();
-
+builder.Services.AddScoped<IMasterService, MasterService>();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

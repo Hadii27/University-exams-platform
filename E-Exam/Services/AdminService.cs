@@ -1,35 +1,47 @@
 ﻿using E_Exam.Data;
 using E_Exam.Migrations;
 using E_Exam.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
+using System.Security.Claims;
 
 namespace E_Exam.Services
 {
     public class AdminService : IAdminServices
     {
         private readonly DataContext _context;
-        public AdminService(DataContext context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public AdminService(DataContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            _userManager = userManager;
+
         }
 
-        public async Task<FacultyModel> AddFaculty(FacultyModel model)
+        public async Task<List<Departments>> GetAllDepartments(string AdminID)
         {
-            var faculty = new FacultyModel
-            {
-                Name = model.Name,
-                Description = model.Description,
-            };
-            _context.faculties.Add(faculty);
-            await _context.SaveChangesAsync();
-            return faculty;
+            var faculty = _context.facultyAdmins.Where(x => x.AdminID == AdminID).FirstOrDefault();
+            if (faculty is null)
+                return null;
+
+            var facultyId = faculty.FacultyId;
+            var departments = await _context.Departments
+                .Where(d => d.FacultyId == facultyId)
+                .ToListAsync();
+            return departments;
         }
 
-        public async Task<Departments> AddDepartmentToFaculty(int facultyId, Departments model)
+        public async Task<Departments> AddDepartmentToFaculty(string AdminID ,Departments model)
         {
-            var Faculty = await _context.faculties.FindAsync(facultyId);
 
+            var faculty = _context.facultyAdmins.Where(x => x.AdminID == AdminID).FirstOrDefault();
+            if (faculty is null)
+                return null;
+            var facultyId = faculty.FacultyId;
 
             var department = new Departments
             {
@@ -47,7 +59,11 @@ namespace E_Exam.Services
 
         public async Task<SubjectModel> AddSubject(SubjectModel subject, int departmentID)
         {
-            var departmentId = await GetDepartmentByID(departmentID); 
+            var departmentId = await GetDepartmentByID(departmentID);
+            var user = GetCurrentAdmin();
+            var checkAdmin = await _context.facultyAdmins.Where(a => a.FacultyId == departmentId.FacultyId && a.AdminID == user).FirstOrDefaultAsync();
+            if (checkAdmin is null)
+                return null;
 
             var subjectModel = new SubjectModel
             {
@@ -106,7 +122,10 @@ namespace E_Exam.Services
         }
         public async Task<LecturerModel> AssignLecturerSubject(string userID, int SubID)
         {
-           
+            var user = await _userManager.FindByIdAsync(userID);
+            var checkRole = _userManager.IsInRoleAsync(user, "Teacher");
+            if (checkRole is null)
+                return null;
             var lecturerModel = new LecturerModel
             {
                 UserID = userID,
@@ -119,7 +138,9 @@ namespace E_Exam.Services
         public async Task<string> DeleteLecturer(string userID)
         {
             
-            var lecturer = await _context.lecturers.Where(l => l.UserID == userID).FirstOrDefaultAsync();       
+            var lecturer = await _context.lecturers.Where(l => l.UserID == userID).FirstOrDefaultAsync();
+            if (lecturer is null)
+                return "Invalid Lecturer";
             _context.lecturers.Remove(lecturer);
             await _context.SaveChangesAsync();
             return $"Lectrer that has ID {lecturer.UserID} Deleted Succesfully";
@@ -131,19 +152,11 @@ namespace E_Exam.Services
             return results;
         }
 
-        public async Task<List<Departments>> GetAllDepartments()
-        {
-            var results = await _context.Departments.ToListAsync();
-            return results;
-        }
-
         public async Task<List<FacultyModel>> GettAllFaculties()
         {
             var faculties = await _context.faculties.ToListAsync();
             return faculties;
         }
-
-
         public async Task<StudentModel> AssignStudent(StudentModel student)
         {
             var user = await GetUserByID(student.UserId);
@@ -186,6 +199,10 @@ namespace E_Exam.Services
             return "Register succeeded";
         }
 
-
+        public string GetCurrentAdmin()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue("UserId");
+            return userIdClaim;
+        }
     }
 }

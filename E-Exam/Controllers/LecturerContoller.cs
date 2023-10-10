@@ -2,6 +2,7 @@
 using E_Exam.Migrations;
 using E_Exam.Models;
 using E_Exam.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +20,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpPost("SubjectID/{SubjectID}/AddExam")]
+        [Authorize (Roles = "Teacher")]
         public async Task<IActionResult> AddExam([FromBody] ExamCreationRequest request, int SubjectID)
         {
             if (request.Exam.Name.IsNullOrEmpty() || request.Exam.Description.IsNullOrEmpty())
@@ -91,6 +93,7 @@ namespace E_Exam.Controllers
 
 
         [HttpGet("AllExams")]
+        [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetAllexams()
         {
             var Exmas = await _lecturerService.GetAllexams();

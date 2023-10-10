@@ -4,6 +4,7 @@ using E_Exam.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_Exam.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20231010091101_add-migration seedRole")]
+    partial class addmigrationseedRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -247,38 +250,6 @@ namespace E_Exam.Migrations
                     b.HasIndex("SubjectId");
 
                     b.ToTable("exams");
-                });
-
-            modelBuilder.Entity("E_Exam.Models.FacultyAdmin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AdminID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AdminName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FacultyId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FacultyName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminID");
-
-                    b.HasIndex("FacultyId");
-
-                    b.ToTable("facultyAdmins");
                 });
 
             modelBuilder.Entity("E_Exam.Models.FacultyModel", b =>
@@ -741,25 +712,6 @@ namespace E_Exam.Migrations
                         .IsRequired();
 
                     b.Navigation("subject");
-                });
-
-            modelBuilder.Entity("E_Exam.Models.FacultyAdmin", b =>
-                {
-                    b.HasOne("E_Exam.Models.ApplicationUser", "Admin")
-                        .WithMany()
-                        .HasForeignKey("AdminID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("E_Exam.Models.FacultyModel", "faculty")
-                        .WithMany()
-                        .HasForeignKey("FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Admin");
-
-                    b.Navigation("faculty");
                 });
 
             modelBuilder.Entity("E_Exam.Models.LecturerModel", b =>

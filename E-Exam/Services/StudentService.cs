@@ -90,18 +90,23 @@ namespace E_Exam.Services
 
             var exam = await _context.exams
                 .Where(e => e.SubjectId == subjectId)
-                .Select(e => new
+                .OrderByDescending(e => e.Id)
+                .Select(e => new                
                 {
                     e.Id,
                     e.Name,
-                    e.Description
+                    e.Description,
+                    e.start,
+                    e.end,
+                    e.ExamScore,
+                    e.SubjectName
                 })
                 .FirstOrDefaultAsync();
 
             return exam;
         }
 
-        public async Task<IEnumerable<Exam>> GetExamsOfSubject(string StudentID, int SubjectID,int ExamID)
+        public async Task<Exam> GetExamsOfSubject(string StudentID, int SubjectID,int ExamID)
         {
             var student = await _context.students.FirstOrDefaultAsync(x => x.UserId == StudentID);
             if (student == null)
@@ -115,34 +120,39 @@ namespace E_Exam.Services
             if (choosed is null)
                 return null;
 
-            var exams = await _context.exams
+            var lastExam = await _context.exams
                 .Where(e => e.SubjectId == Subject.Id)
+                .OrderByDescending(e => e.Id)
                 .Include(e => e.questions)
                 .ThenInclude(e => e.answersModels)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
+            if (lastExam == null)
+                return null;
 
-            var examList = exams.Select(e => new Exam
+            var exam = new Exam
             {
-                Id = e.Id,
-                Name = e.Name,
-                Description = e.Description,
-                SubjectName = e.SubjectName,
-                Grade = e.Grade, 
-                QuestionsCount = e.QuestionsCount, 
-                ExamScore = e.ExamScore, 
-                questions = e.questions.Select(q => new Questions
+                Id = lastExam.Id,
+                Name = lastExam.Name,
+                Description = lastExam.Description,
+                SubjectName = lastExam.SubjectName,
+                Grade = lastExam.Grade,
+                QuestionsCount = lastExam.QuestionsCount,
+                ExamScore = lastExam.ExamScore,
+                questions = lastExam.questions.Select(q => new Questions
                 {
                     id = q.id,
                     Question = q.Question,
+                    correctAnswer = q.correctAnswer,
+                    Score = q.Score,
                     answersModels = q.answersModels.Select(a => new AnswersModel
                     {
                         Id = a.Id,
                         Text = a.Text,
+                        Questionsid = a.Questionsid,
                     }).ToList()
                 }).ToList()
-            }).ToList();
-
-            return examList;
+            };
+            return exam;
         }
 
         public async Task<string> ExamSubmit(int ExamID, string UserId, IEnumerable<AnswersModel> AnswerIDs)
@@ -156,7 +166,6 @@ namespace E_Exam.Services
             var CheckSubmit = await _context.submitedExams.Where(x => x.UserId == UserId && x.ExamID == ExamID).FirstOrDefaultAsync();
             if (CheckSubmit is not null)           
                 return "U have been submit this exam before";
-            
             foreach (var AnswerID in AnswerIDs)
             {
                 var answer = await _context.answers.FindAsync(AnswerID.Id);

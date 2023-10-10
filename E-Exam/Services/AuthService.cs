@@ -2,6 +2,7 @@
 using E_Exam.Dto;
 using E_Exam.Helpers;
 using E_Exam.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
@@ -21,13 +22,16 @@ namespace E_Exam.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly jwt _jwt;
         private readonly DataContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AuthService (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IOptions<jwt> jwt, DataContext dataContext)
+
+        public AuthService (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IOptions<jwt> jwt, DataContext dataContext, IHttpContextAccessor httpContextAccessor)
         {
             _roleManager = roleManager;
             _userManager = userManager;
             _jwt = jwt.Value;
             _context = dataContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<string> ReqRegister(ReqRegister model)
@@ -141,7 +145,21 @@ namespace E_Exam.Services
 
         public async Task<string> AddRole(AddRoleModel model)
         {
+            var currentUserID = GetCurrentUser();
+            if (currentUserID == null)
+            {
+                return "Unauthorized";
+            }
+
             var user = await _userManager.FindByIdAsync(model.userID);
+
+
+            var CheckMasterRole = await _context.UserRoles.Where(r => r.UserId == currentUserID && r.RoleId == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b").FirstOrDefaultAsync();
+            if (CheckMasterRole == null)
+            {
+                if (model.RoleName == "Master" || model.RoleName == "Admin")
+                    return "You cannot Assign This Roles";
+            }
 
             if (user == null || !await _roleManager.RoleExistsAsync(model.RoleName))            
                 return "Invalid user or role";
@@ -158,7 +176,7 @@ namespace E_Exam.Services
             }
 
             else
-                return "Failed to add role to rhis user";
+                return "Failed to add role to this user";
         }
 
         public async Task<JwtSecurityToken> CreateJwtTokenAsync(ApplicationUser user)
@@ -194,7 +212,11 @@ namespace E_Exam.Services
             return JwtSecurityToken;
         }
 
- 
+        public string GetCurrentUser()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue("UserId");
+            return userIdClaim;
+        }
 
     }
 }
