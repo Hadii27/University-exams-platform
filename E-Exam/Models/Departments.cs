@@ -9,6 +9,8 @@ namespace E_Exam.Models
         public string Description { get; set; }
 
         public int FacultyId { get; set; }
+        [JsonIgnore]
+
         public FacultyModel Faculty { get; set; }
     }
 }

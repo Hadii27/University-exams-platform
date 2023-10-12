@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using E_Exam.Migrations;
+using System.ComponentModel.DataAnnotations;
 
 namespace E_Exam.Models
 {
@@ -17,5 +18,17 @@ namespace E_Exam.Models
 
         [Required]
         public string PhoneNumber { get; set; }
+        [Required]
+        public int internationalID { get; set; }
+
+        public int Grade { get; set; }
+
+        public string RoleID { get; set; }
+
+        public int FaculityID { get; set; }
+        public int DepartmentID { get; set; }
+
+
+
     }
 }

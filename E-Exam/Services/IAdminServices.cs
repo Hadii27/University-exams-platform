@@ -30,6 +30,8 @@ namespace E_Exam.Services
         public Task<StudentModel> AssignStudent(StudentModel student);
 
         public string GetCurrentAdmin();
+        public  Task<IEnumerable<LecturerModel>> GetLecturers();
+
 
 
     };

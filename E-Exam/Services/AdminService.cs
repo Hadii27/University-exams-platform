@@ -19,7 +19,6 @@ namespace E_Exam.Services
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
-
         }
 
         public async Task<List<Departments>> GetAllDepartments(string AdminID)
@@ -37,7 +36,6 @@ namespace E_Exam.Services
 
         public async Task<Departments> AddDepartmentToFaculty(string AdminID ,Departments model)
         {
-
             var faculty = _context.facultyAdmins.Where(x => x.AdminID == AdminID).FirstOrDefault();
             if (faculty is null)
                 return null;
@@ -54,7 +52,6 @@ namespace E_Exam.Services
             await _context.SaveChangesAsync();
             await IncrementDepartmentCount(facultyId);
             return department;
-
         }
 
         public async Task<SubjectModel> AddSubject(SubjectModel subject, int departmentID)
@@ -135,6 +132,7 @@ namespace E_Exam.Services
             await _context.SaveChangesAsync();
             return lecturerModel;
         }
+
         public async Task<string> DeleteLecturer(string userID)
         {
             
@@ -179,10 +177,8 @@ namespace E_Exam.Services
             };
             _context.students.Add(Student);
             await _context.SaveChangesAsync();
-            await ChangeStatusOfReq(Student.internationalID);
             return Student;
         }
-
 
         public async Task<string> ChangeStatusOfReq(int internationalID)
         {
@@ -204,5 +200,12 @@ namespace E_Exam.Services
             var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirstValue("UserId");
             return userIdClaim;
         }
+
+        public async Task<IEnumerable<LecturerModel>> GetLecturers()
+        {
+            var lecturers = await _context.lecturers.ToListAsync();
+            return lecturers;
+        }
+
     }
 }

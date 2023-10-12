@@ -32,38 +32,67 @@ namespace E_Exam.Services
             return subject;
         }
 
-        public async Task<string> StudentsSubjects(string StudentId, IEnumerable<ChooseSubjects> SubIDs)
+        //public async Task<string> StudentsSubjects(string StudentId, IEnumerable<ChooseSubjects> SubIDs)
+        //{
+        //    var addedSubjects = new List<ChooseSubjects>();
+        //    var subjectNames = new List<string>();
+
+        //    foreach (var choosedSubject in SubIDs)
+        //    {
+        //        var sub = await _context.subject.FindAsync(choosedSubject.SubjectId);
+        //        if (sub is null)
+        //        {
+        //            return null;
+        //        }
+        //        var exist = await _context.chooseSubjects.Where(u => u.UserId == StudentId && sub.Id == u.SubjectId).FirstOrDefaultAsync();
+        //        if (exist is not null)
+        //            return $"You have been choosed it before";
+
+        //        var choosed = new ChooseSubjects
+        //        {
+        //            SubjectId = sub.Id,
+        //            UserId = StudentId,
+        //            grade = sub.Grade,
+        //        };
+
+        //        var result = await _context.chooseSubjects.AddAsync(choosed);
+        //        addedSubjects.Add(result.Entity);
+
+        //        subjectNames.Add(sub.Name); 
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+        //    string subjectNamesStr = string.Join(", ", subjectNames); 
+
+        //    return $"You have chosen the following subjects: {subjectNamesStr}";
+        //}
+        public async Task<string> StudentsSubjects(string StudentId, int SubID)
         {
-            var addedSubjects = new List<ChooseSubjects>();
             var subjectNames = new List<string>();
-
-            foreach (var choosedSubject in SubIDs)
+            var sub = await _context.subject.FindAsync(SubID);
+            if (sub is null)
             {
-                var sub = await _context.subject.FindAsync(choosedSubject.SubjectId);
-                if (sub is null)
-                {
-                    return null;
-                }
-                var exist = await _context.chooseSubjects.Where(u => u.UserId == StudentId && sub.Id == u.SubjectId).FirstOrDefaultAsync();
-                if (exist is not null)
-                    return $"You have been choosed it before";
-
-                var choosed = new ChooseSubjects
-                {
-                    SubjectId = sub.Id,
-                    UserId = StudentId,
-                    grade = sub.Grade,
-                };
-
-                var result = await _context.chooseSubjects.AddAsync(choosed);
-                addedSubjects.Add(result.Entity);
-
-                subjectNames.Add(sub.Name); 
+                return null;
             }
+            var exist = await _context.chooseSubjects.Where(u => u.UserId == StudentId && sub.Id == u.SubjectId).FirstOrDefaultAsync();
+            if (exist is not null)
+                return $"You have been choosed it before";
 
+            var choosed = new ChooseSubjects
+            {
+                SubjectId = sub.Id,
+                UserId = StudentId,
+                grade = sub.Grade,
+            };
+
+            var result = await _context.chooseSubjects.AddAsync(choosed);
+
+            subjectNames.Add(sub.Name);
+        
             await _context.SaveChangesAsync();
 
-            string subjectNamesStr = string.Join(", ", subjectNames); 
+            string subjectNamesStr = string.Join(", ", subjectNames);
 
             return $"You have chosen the following subjects: {subjectNamesStr}";
         }
@@ -106,11 +135,17 @@ namespace E_Exam.Services
             return exam;
         }
 
-        public async Task<Exam> GetExamsOfSubject(string StudentID, int SubjectID,int ExamID)
+        public async Task<Exam> GetExamsOfSubject(string StudentID, int ExamID)
         {
             var student = await _context.students.FirstOrDefaultAsync(x => x.UserId == StudentID);
             if (student == null)
                 return null;
+
+            var Selectedexam = await _context.exams.FindAsync(ExamID);
+            if (Selectedexam == null)
+                return null;
+
+            var SubjectID = Selectedexam.SubjectId;
 
             var Subject = await _context.subject.FindAsync(SubjectID);
             if (Subject == null)

@@ -4,6 +4,7 @@ using E_Exam.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_Exam.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20231011124755_internationalIdToApplicationUser")]
+    partial class internationalIdToApplicationUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,10 +99,6 @@ namespace E_Exam.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<string>("RequestedRole")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -371,21 +370,7 @@ namespace E_Exam.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
-                    b.Property<int>("DepartmentID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DepartmentName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FaculityID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FaculityName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -393,18 +378,11 @@ namespace E_Exam.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Grade")
-                        .HasColumnType("int");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserID")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -416,10 +394,6 @@ namespace E_Exam.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("roleID")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -756,7 +730,7 @@ namespace E_Exam.Migrations
             modelBuilder.Entity("E_Exam.Models.Departments", b =>
                 {
                     b.HasOne("E_Exam.Models.FacultyModel", "Faculty")
-                        .WithMany("departments")
+                        .WithMany()
                         .HasForeignKey("FacultyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -912,11 +886,6 @@ namespace E_Exam.Migrations
             modelBuilder.Entity("E_Exam.Models.Exam", b =>
                 {
                     b.Navigation("questions");
-                });
-
-            modelBuilder.Entity("E_Exam.Models.FacultyModel", b =>
-                {
-                    b.Navigation("departments");
                 });
 
             modelBuilder.Entity("E_Exam.Models.LecturerModel", b =>

@@ -59,7 +59,7 @@ namespace E_Exam.Controllers
                 return BadRequest("U donnot havve permission to update this faculty");
         }
 
-        [HttpPost("AddSubject")]
+        [HttpPost("Department/{DepartmentID}/AddSubject")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddSubject(SubjectDto dto, int DepartmentID)
         {
@@ -92,7 +92,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AssignSubjectToLecturer")]
+        [HttpPost("Subject/{SubID}/Prof/{UserID}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignSubjectToLecturer(string UserID, int SubID)
         {
@@ -112,7 +112,15 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("DeleteLecturer")]
+        [HttpGet("AllLecturers")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetLecturers()
+        {
+            var result = await _adminServices.GetLecturers();
+            return Ok(result);
+        }
+
+        [HttpDelete("DeleteLecturer/{UserID}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLecturer(string UserID)
         {
@@ -145,7 +153,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AssginStudent")]
+        [HttpPost("AssignStudent/{studentID}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignUserToUser(StudentDto student)
         {

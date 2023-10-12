@@ -41,25 +41,44 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("ChooseSubjects")]
+        //[HttpPost("ChooseSubjects")]
+        //[Authorize(Roles = "Student")]
+        //public async Task<IActionResult> AddStudentSub( IEnumerable<ChoosedSubjectDto> SubIDs)
+        //{
+        //    var student = _studentService.GetCurrentStudent();
+        //    if (student is null)
+        //    {
+        //        return Unauthorized("Unauthorized");
+        //    }
+        //    var chooseSubjects = new List<ChooseSubjects>();
+        //    foreach (var subId in SubIDs)
+        //    {
+        //        var s = new ChooseSubjects
+        //        {
+        //            SubjectId = subId.SubID
+        //        };
+        //        chooseSubjects.Add(s);
+        //    }
+        //    var result = await _studentService.StudentsSubjects(student, chooseSubjects);
+        //    if (result == null)
+        //    {
+        //        return NotFound("Subject not found");
+        //    }
+        //    return Ok(result);
+        //}
+
+
+        [HttpPost("ChooseSubjects/{SubID}")]
         [Authorize(Roles = "Student")]
-        public async Task<IActionResult> AddStudentSub( IEnumerable<ChoosedSubjectDto> SubIDs)
+        public async Task<IActionResult> AddStudentSub(int SubID)
         {
             var student = _studentService.GetCurrentStudent();
             if (student is null)
             {
                 return Unauthorized("Unauthorized");
             }
-            var chooseSubjects = new List<ChooseSubjects>();
-            foreach (var subId in SubIDs)
-            {
-                var s = new ChooseSubjects
-                {
-                    SubjectId = subId.SubID
-                };
-                chooseSubjects.Add(s);
-            }
-            var result = await _studentService.StudentsSubjects(student, chooseSubjects);
+            
+            var result = await _studentService.StudentsSubjects(student, SubID);
             if (result == null)
             {
                 return NotFound("Subject not found");
@@ -99,16 +118,16 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("/subjects/{SubjectId}/exams/{ExamID}")]
+        [HttpGet("exams/{ExamID}")]
         [Authorize(Roles = "Student")]
-        public async Task<IActionResult> GetExams([FromRoute] int SubjectId, [FromRoute] int ExamID)
+        public async Task<IActionResult> GetExams([FromRoute] int ExamID)
         {
             var student = _studentService.GetCurrentStudent();
             if (student is null)
             {
                 return Unauthorized("Unauthorized");
             }
-            var result = await _studentService.GetExamsOfSubject(student, SubjectId, ExamID);
+            var result = await _studentService.GetExamsOfSubject(student, ExamID);
             if (result == null)
                 return NotFound("No Exams Found!");
 
@@ -132,10 +151,8 @@ namespace E_Exam.Controllers
                 };
                 Answers.Add(a);
             }
-
             var result = await _studentService.ExamSubmit(ExamID, student, Answers);
             return Ok(result);
         }
-
     }
 }

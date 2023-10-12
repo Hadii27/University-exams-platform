@@ -9,5 +9,10 @@ namespace E_Exam.Models
         public string FirstName { get; set; }
         [Required]
         public string LastName { get; set; }
+        [Required]
+        public int InternationalID { get; set; }
+
+        [Required]
+        public string RequestedRole { get; set; }
     }
 }
