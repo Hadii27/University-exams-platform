@@ -68,7 +68,7 @@ namespace E_Exam.Controllers
         //}
 
 
-        [HttpPost("ChooseSubjects/{SubID}")]
+        [HttpPost("Subjects/ChooseSubjects/{SubID}")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> AddStudentSub(int SubID)
         {
@@ -86,7 +86,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("ChoosedSubjects")]
+        [HttpGet("Subjects/ChoosedSubjects")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetChoosedSubjects()
         {
@@ -118,7 +118,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("exams/{ExamID}")]
+        [HttpGet("Subject/Exams/exams/{ExamID}")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetExams([FromRoute] int ExamID)
         {
@@ -134,7 +134,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("Exam/{ExamID}/Answer")]
+        [HttpPost("Subject/Exams/exam/{ExamID}/Answer")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> ChooseAnswer(int ExamID, [FromBody] IEnumerable<AnswersForStudentDto> AnswerID)
         {

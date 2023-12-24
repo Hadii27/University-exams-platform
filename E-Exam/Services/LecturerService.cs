@@ -105,6 +105,8 @@ namespace E_Exam.Services
         public async Task<SubjectModel> GetSubject(int SubjectId)
         {
             var subject = await _context.subject.FindAsync(SubjectId);
+            if (subject is null)
+                return null;
             return subject;
         }
 

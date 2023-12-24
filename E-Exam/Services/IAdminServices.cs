@@ -4,10 +4,12 @@ namespace E_Exam.Services
 {
     public interface IAdminServices
     {
+        public Task<FacultyModel> College(string AdminID);
 
-        public  Task<Departments> AddDepartmentToFaculty(string AdminID, Departments model);
+        public Task<Departments> AddDepartmentToFaculty(string AdminID, Departments model);
 
         public Task<SubjectModel> AddSubject(SubjectModel subject, int departmentID);
+        public Task<IEnumerable<ReqRegister>> GetRequests();
 
         public Task<FacultyModel> GetFacultyByID(int id);
 
@@ -27,7 +29,7 @@ namespace E_Exam.Services
 
         public Task<List<FacultyModel>> GettAllFaculties();
 
-        public Task<StudentModel> AssignStudent(StudentModel student);
+        public Task<StudentModel> AssignStudent(string studentID, int intenationalID, int CollegeID, int DeptID, int grade);
 
         public string GetCurrentAdmin();
         public  Task<IEnumerable<LecturerModel>> GetLecturers();

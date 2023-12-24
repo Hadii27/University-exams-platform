@@ -5,10 +5,9 @@ namespace E_Exam.Services
 {
     public interface IAuthService
     {
-        public Task<AuthModel> RegisterAsync(RegisterModel model);
+        public Task<AuthModel> RegisterAsync(RegisterModel model, int CollegeID, string RoleID, int DepartmentID);
         public Task<AuthModel> GetToken(TokenRequestModel model);
-        public Task<string> AddRole(AddRoleModel model, string UserID, string RoleID);
-        public Task<IEnumerable<ReqRegister>> GetRequests();
+        public Task<string> AddRole(string UserID, string RoleID);
         public Task<string> ChangeStatusOfReq(int internationalID);
         public Task<List<IdentityRole>> GetRoles();
 

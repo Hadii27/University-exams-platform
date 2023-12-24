@@ -34,27 +34,27 @@ namespace E_Exam.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<IEnumerable<ReqRegister>> GetRequests()
-        {
-            var current = GetCurrentAdmin();
-            var requests = await _context.reqRegisters
-                .Where(r => r.status == "Pending")
-                .ToListAsync();
+        //public async Task<IEnumerable<ReqRegister>> GetRequests()
+        //{
+        //    var current = GetCurrentAdmin();
+        //    var requests = await _context.reqRegisters
+        //        .Where(r => r.status == "Pending")
+        //        .ToListAsync();
 
-            var result = new List<ReqRegister>();
+        //    var result = new List<ReqRegister>();
 
-            foreach (var request in requests)
-            {
-                var facultyAdmin = await _context.facultyAdmins
-                    .Where(a => a.FacultyId == request.FaculityID && a.AdminID == current)
-                    .FirstOrDefaultAsync();
-                if (facultyAdmin != null)
-                    result.Add(request);                                    
-            }
-            return result;
-        }
+        //    foreach (var request in requests)
+        //    {
+        //        var facultyAdmin = await _context.facultyAdmins
+        //            .Where(a => a.FacultyId == request.FaculityID && a.AdminID == current)
+        //            .FirstOrDefaultAsync();
+        //        if (facultyAdmin != null)
+        //            result.Add(request);                                    
+        //    }
+        //    return result;
+        //}
 
-        public async Task<AuthModel> RegisterAsync(RegisterModel model)
+        public async Task<AuthModel> RegisterAsync(RegisterModel model, int CollegeID, string RoleID, int DepartmentID)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
                 return new AuthModel { Message = "Email Is Already Exist" };
@@ -65,15 +65,15 @@ namespace E_Exam.Services
             if (checkID is not null)
                 return null;
 
-            var role = await _context.Roles.FindAsync(model.RoleID);
+            var role = await _context.Roles.FindAsync(RoleID);
             if (role == null)
                 return null;
 
-            var faculity = await _context.faculties.FindAsync(model.FaculityID);
+            var faculity = await _context.faculties.FindAsync(CollegeID);
             if (faculity == null)
                 return null;
 
-            var department = await _context.Departments.FindAsync(model.DepartmentID);
+            var department = await _context.Departments.FindAsync(DepartmentID);
             if (department == null)
                 return null;
             var user = new ApplicationUser
@@ -111,9 +111,9 @@ namespace E_Exam.Services
                 status = "Pending",
                 UserID = user.Id,                
                 Grade = model.Grade,
-                FaculityID = model.FaculityID,
+                FaculityID = faculity.Id,
                 FaculityName = faculity.Name,
-                DepartmentID = model.DepartmentID,
+                DepartmentID = department.Id,
                 DepartmentName = department.Name,
                               
             };
@@ -151,11 +151,11 @@ namespace E_Exam.Services
                 return authModel;
             }
 
-            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                authModel.Message = "Email Or Password Is invalid";
-                return authModel;
-            }
+            //if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+            //{
+            //    authModel.Message = "Email Or Password Is invalid";
+            //    return authModel;
+            //}
 
             var jwtSecurityToken = await CreateJwtTokenAsync(user);
             var roleList = await _userManager.GetRolesAsync(user);
@@ -176,34 +176,33 @@ namespace E_Exam.Services
             return authModel;
         }
 
-        public async Task<string> AddRole(AddRoleModel model ,string UserID, string RoleID)
+        public async Task<string> AddRole(string UserID, string RoleID)
         {
             var currentUserID = GetCurrentUser();
             if (currentUserID == null)            
                 return "Unauthorized";
             
             var user = await _userManager.FindByIdAsync(UserID);
-
             var CheckMasterRole = await _context.UserRoles.Where(r => r.UserId == currentUserID && r.RoleId == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b").FirstOrDefaultAsync();
             var checkRole = await _context.Roles.FindAsync(RoleID);
-            if (CheckMasterRole == null)
+            if (checkRole == null)
             {
                 return "Invalid role id";
             }
+
             if (CheckMasterRole == null)
             {
-                if (model.RoleName == "Master" || model.RoleName == "Admin")
+                if (RoleID == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b" || RoleID == "e308bc06-17e7-4b98-8ae5-a4cb16e111b8")
                     return "You cannot Assign This Roles";
             }
 
-            if (user == null || !await _roleManager.RoleExistsAsync(model.RoleName))            
+            if (user == null || !await _roleManager.RoleExistsAsync(checkRole.Name))            
                 return "Invalid user or role";
             
-            if (await _userManager.IsInRoleAsync(user, model.RoleName))           
+            if (await _userManager.IsInRoleAsync(user, checkRole.Name))           
                 return "This user is already assigned to this role";
 
-            var AddRole = await _userManager.AddToRoleAsync(user, model.RoleName);
-            await ChangeStatusOfReq(user.InternationalID);
+            var AddRole = await _userManager.AddToRoleAsync(user, checkRole.Name);
 
             return "Role Added Succesfully";
         }

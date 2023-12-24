@@ -6,6 +6,7 @@ using E_Exam.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
 
@@ -21,9 +22,16 @@ namespace E_Exam.Controllers
             _adminServices = adminServices;
         }
 
+        [HttpGet("College")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> College()
+        {
+            var admin = _adminServices.GetCurrentAdmin();
+            var result = await _adminServices.College(admin);
+            return Ok(result);
+        }
 
-
-        [HttpPost("AddDepartmentsToFaculty")]
+        [HttpPost("College/CreateDepartment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddDepartments( DepartmentDto dto)
         {
@@ -44,7 +52,6 @@ namespace E_Exam.Controllers
                 return BadRequest("You cannot modify this faculty");
             }
 
-
             var departmentModel = new Departments
             {
                 Name = dto.Name,
@@ -56,10 +63,10 @@ namespace E_Exam.Controllers
                 return Ok(result);
 
             else
-                return BadRequest("U donnot havve permission to update this faculty");
+                return BadRequest("U donnot have permission to update this College");
         }
 
-        [HttpPost("Department/{DepartmentID}/AddSubject")]
+        [HttpPost("College/Department/{DepartmentID}/AddSubject")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddSubject(SubjectDto dto, int DepartmentID)
         {
@@ -92,7 +99,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("Subject/{SubID}/Prof/{UserID}")]
+        [HttpPost("College/Subjects/{SubID}/Prof/{UserID}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignSubjectToLecturer(string UserID, int SubID)
         {
@@ -112,7 +119,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("AllLecturers")]
+        [HttpGet("College/Lecturers")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetLecturers()
         {
@@ -120,7 +127,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("DeleteLecturer/{UserID}")]
+        [HttpDelete("College/Lecturers/DeleteLecturer/{UserID}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLecturer(string UserID)
         {
@@ -131,7 +138,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("AllSubjects")]
+        [HttpGet("College/Subjects")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GettAllSubjects()
         {
@@ -139,7 +146,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpGet("AllDepartments")]
+        [HttpGet("College/Departments")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllDepartments()
         {
@@ -153,23 +160,26 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AssignStudent/{studentID}")]
+        [HttpGet("College/Requests")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AssignUserToUser(StudentDto student)
+        public async Task<IActionResult> GetRegisterRequests()
         {
-            var DepartmentID = await _adminServices.GetDepartmentByID(student.DepartmentId);
-            var user = await _adminServices.GetUserByID(student.UserId);
-            if (user is null || DepartmentID is null)
+            var requests = await _adminServices.GetRequests();
+            if (requests is null)
+                return NotFound("No Requests");
+            return Ok(requests);
+        }
+
+        [HttpPost("College/Requests/AssignStudent/{studentID}/InternationalID{InternationalID}/College{CollegeID}/Department{DepartmentID}/Grade{Level}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignUserToUser(string studentID, int InternationalID, int CollegeID, int DepartmentID, int Level)
+        {
+            var DeptID = await _adminServices.GetDepartmentByID(DepartmentID);
+            var user = await _adminServices.GetUserByID(studentID);
+            if (user is null || DeptID is null)
                 return NotFound("Invalid UserID Or DepartmentID");
 
-            var Student = new StudentModel
-            {
-                UserId = student.UserId,
-                DepartmentId = student.DepartmentId,    
-                Grade = student.Grade,
-                internationalID = student.internationalID
-            };
-            var result = await _adminServices.AssignStudent(Student);
+            var result = await _adminServices.AssignStudent(studentID, InternationalID, CollegeID, DepartmentID, Level);
             if (result is null)
                 return BadRequest("International ID is already exist");
             return Ok(result);

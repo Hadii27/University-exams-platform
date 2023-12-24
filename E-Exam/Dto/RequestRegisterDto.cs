@@ -1,4 +1,6 @@
-﻿namespace E_Exam.Dto
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace E_Exam.Dto
 {
     public class RequestRegisterDto
     {
@@ -7,9 +9,8 @@
         public string Username { get; set; }
         public string Email { get; set; }
         public int internationalID { get; set; }
-
-        public string PhoneNumber { get; set; }
-        public string role { get; set; }
-
+        public string PhoneNumber { get; set; }      
+        public string Password { get; set; }
+        public int Grade { get; set; }
     }
 }

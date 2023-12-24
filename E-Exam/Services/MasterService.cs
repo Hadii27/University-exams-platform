@@ -104,6 +104,32 @@ namespace E_Exam.Services
                 return "Failed to remove admin role";
             
         }
+
+        public async Task<IEnumerable<object>> Admins()
+        {
+            var usersWithAdminRole = new List<object>();
+
+            var users = await _context.Users.ToListAsync();
+            foreach (var user in users)
+            {
+                var hasAdminRole = await _context.UserRoles.AnyAsync(r => r.RoleId == "e308bc06-17e7-4b98-8ae5-a4cb16e111b8" && user.Id == r.UserId);
+                if (hasAdminRole)
+                {
+                    // Select specific user information here.
+                    var userInformation = new
+                    {
+                        UserId = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber,
+
+                    };
+                    usersWithAdminRole.Add(userInformation);
+                }
+            }
+
+            return usersWithAdminRole;
+        }
     }
 
 }

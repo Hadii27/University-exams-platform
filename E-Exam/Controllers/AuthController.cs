@@ -17,17 +17,6 @@ namespace E_Exam.Controllers
             _authService = authService;
         }
 
-
-        [HttpGet("RequestRegister")]
-        [Authorize(Roles ="Admin")]
-        public async Task <IActionResult> GetRegisterRequests()
-        {
-            var requests = await _authService.GetRequests();
-            if (requests is null)
-                return NotFound("No Requests");
-            return Ok(requests);
-        }
-
         [HttpGet("Roles")]
         public async Task<IActionResult> Roles()
         {
@@ -35,19 +24,35 @@ namespace E_Exam.Controllers
             return Ok(roles);
         }
 
-        [HttpGet("Faculties")]
+        [HttpGet("Colleges")]
         public async Task<IActionResult> Faculties()
         {
             var faculties = await _authService.GetFaculties();
             return Ok(faculties);
         }
 
-        [HttpPost("Register")]
-        public async Task<IActionResult> RegisterAsync([FromBody]RegisterModel model)
+        [HttpPost("College{ReqCollegeID}/Department{ReqDepartmentID}/Rule{ReqRoleID}/Register")]
+        public async Task<IActionResult> RegisterAsync([FromBody]RequestRegisterDto Dto , int ReqCollegeID, string ReqRoleID, int ReqDepartmentID)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.RegisterAsync(model);
+
+            var model = new RegisterModel
+            {
+                FirstName = Dto.FirstName,
+                LastName = Dto.LastName,
+                Email = Dto.Email,
+                PhoneNumber = Dto.PhoneNumber,
+                Password = Dto.Password,
+                internationalID = Dto.internationalID,
+                Grade = Dto.Grade,
+                FaculityID = ReqCollegeID,
+                DepartmentID = ReqDepartmentID,
+                RoleID = ReqRoleID,
+                Username = Dto.Username,
+                
+            };
+            var result = await _authService.RegisterAsync(model, ReqCollegeID, ReqRoleID, ReqDepartmentID);
             if (!result.isAuthenticated)            
                 return BadRequest(result.Message);
 
@@ -67,21 +72,16 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AddRole/User/{UserID}/Role/{RoleID}")]
+        [HttpPost("Requests/AddRole/User/{UserID}/Role/{RoleID}")]
         [Authorize(Roles = "Master,Admin")]
-        public async Task<IActionResult> AddRoleAsync([FromBody]AddRoleDto model,[FromRoute] string UserID, [FromRoute] string RoleID)
+        public async Task<IActionResult> AddRoleAsync([FromRoute] string UserID, [FromRoute] string RoleID)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var role = new AddRoleModel
-            {               
-                RoleName = model.RoleName,
-                userID = UserID
-            };
-            var result = await _authService.AddRole(role, UserID, RoleID);
+            var result = await _authService.AddRole(UserID, RoleID);
             if (!string.IsNullOrEmpty(result))
                 return BadRequest(result);
-            return Ok(model);
+            return Ok(result);
         }
     }
 }

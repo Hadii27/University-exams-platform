@@ -50,7 +50,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AssignFaculty")]
+        [HttpPost("Admins/AssignFaculty")]
         [Authorize(Roles = "Master")]
         public async Task<IActionResult> AssignFacultyToAdmin(FAcultyAdminDto dto)
         {
@@ -83,7 +83,6 @@ namespace E_Exam.Controllers
 
         [HttpGet("AllFacultyWithAdmins")]
         [Authorize(Roles = "Master")]
-
         public async Task<IActionResult> GetAllAssignedFaculity()
         {
             if (!ModelState.IsValid)
@@ -93,6 +92,20 @@ namespace E_Exam.Controllers
                 return Unauthorized("Unauthorized");
 
             var result = await _masterService.GetAllAssignFacultyAdmin();
+            return Ok(result);
+        }
+
+        [HttpGet("Admins")]
+        [Authorize(Roles = "Master")]
+        public async Task<IActionResult> Admins()
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var current = _masterService.GetCurrentUser();
+            if (current == null)
+                return Unauthorized("Unauthorized");
+
+            var result = await _masterService.Admins();
             return Ok(result);
         }
 
@@ -110,7 +123,7 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{AdminID}")]
+        [HttpDelete("Admin/Delete{AdminID}")]
         public async Task<IActionResult> UnAssignAdmin(string AdminID)
         {
             if (!ModelState.IsValid)

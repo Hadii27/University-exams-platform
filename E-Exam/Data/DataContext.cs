@@ -6,7 +6,7 @@ namespace E_Exam.Data
 {
     public class DataContext : IdentityDbContext<ApplicationUser>
     {
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
+            public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
         }
 

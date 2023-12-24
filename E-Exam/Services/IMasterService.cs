@@ -1,4 +1,5 @@
 ﻿using E_Exam.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace E_Exam.Services
 {
@@ -9,6 +10,7 @@ namespace E_Exam.Services
         public Task<IEnumerable<FacultyAdmin>> GetAllAssignFacultyAdmin();
         public Task<IEnumerable<FacultyModel>> GetFaculties();
         public  Task<string> UnAssignAdmin(string userID);
+        public Task<IEnumerable<object>> Admins();
 
         public string GetCurrentUser();
 

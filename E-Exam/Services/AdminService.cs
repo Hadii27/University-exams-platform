@@ -21,6 +21,20 @@ namespace E_Exam.Services
             _userManager = userManager;
         }
 
+
+        public async Task<FacultyModel> College(string AdminID)
+        {
+            var Getfaculty = _context.facultyAdmins.Where(x => x.AdminID == AdminID).FirstOrDefault();
+            if (Getfaculty is null)
+                return null;
+
+            var faculty = await _context.faculties.Include(f => f.departments).Where(f => f.Id == Getfaculty.FacultyId).FirstOrDefaultAsync();
+            if (faculty is null)
+                return null;
+            return faculty;
+        }
+
+
         public async Task<List<Departments>> GetAllDepartments(string AdminID)
         {
             var faculty = _context.facultyAdmins.Where(x => x.AdminID == AdminID).FirstOrDefault();
@@ -103,6 +117,26 @@ namespace E_Exam.Services
             };            
         }
 
+        public async Task<IEnumerable<ReqRegister>> GetRequests()
+        {
+            var current = GetCurrentAdmin();
+            var requests = await _context.reqRegisters
+                .Where(r => r.status == "Pending")
+                .ToListAsync();
+
+            var result = new List<ReqRegister>();
+
+            foreach (var request in requests)
+            {
+                var facultyAdmin = await _context.facultyAdmins
+                    .Where(a => a.FacultyId == request.FaculityID && a.AdminID == current)
+                    .FirstOrDefaultAsync();
+                if (facultyAdmin != null)
+                    result.Add(request);
+            }
+            return result;
+        }
+
         public async Task<ApplicationUser> GetUserByID(string id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -128,7 +162,7 @@ namespace E_Exam.Services
                 UserID = userID,
                 SubjectId = SubID,
             };
-            _context.lecturers.Add(lecturerModel);
+            await _context.lecturers.AddAsync(lecturerModel);
             await _context.SaveChangesAsync();
             return lecturerModel;
         }
@@ -155,34 +189,35 @@ namespace E_Exam.Services
             var faculties = await _context.faculties.ToListAsync();
             return faculties;
         }
-        public async Task<StudentModel> AssignStudent(StudentModel student)
+        public async Task<StudentModel> AssignStudent(string studentID, int intenationalID, int CollegeID, int DeptID, int grade)
         {
-            var user = await GetUserByID(student.UserId);
-            var department =  await GetDepartmentByID(student.DepartmentId);
+            var user = await GetUserByID(studentID);
+            var department =  await GetDepartmentByID(DeptID);
             var departmentName = department.Name;
             var username = user.UserName;
             var faculty = await GetFacultyByID(department.FacultyId);
-            var nationalID = await _context.reqRegisters.Where(i => i.internationalID == student.internationalID).FirstOrDefaultAsync();
+            var nationalID = await _context.students.Where(i => i.internationalID == intenationalID).FirstOrDefaultAsync();
             if (nationalID is not null)
                 return null;
             var Student = new StudentModel
             {
-                UserId = student.UserId,
+                UserId = studentID,
                 Username = username,
                 FacultyName = faculty.Name,
-                DepartmentId = student.DepartmentId,
+                DepartmentId = DeptID,
                 DepartmentName = departmentName,
-                Grade = student.Grade,
-                internationalID = student.internationalID,
+                Grade = grade,
+                internationalID = intenationalID,
             };
             _context.students.Add(Student);
             await _context.SaveChangesAsync();
+            await ChangeStatusOfReq(studentID);
             return Student;
         }
 
-        public async Task<string> ChangeStatusOfReq(int internationalID)
+        public async Task<string> ChangeStatusOfReq(string UserId)
         {
-            var request = await _context.reqRegisters.FirstOrDefaultAsync(i => i.internationalID == internationalID);
+            var request = await _context.reqRegisters.FirstOrDefaultAsync(i => i.UserID == UserId);
 
             if (request == null)           
                 return "Request not found"; 

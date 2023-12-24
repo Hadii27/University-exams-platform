@@ -207,10 +207,6 @@ namespace E_Exam.Services
                 if (answer == null)
                     return "Invalid answer";
 
-                var checkAns = await _context.choosenAnswers.Where(c => c.userId == UserId && c.answerId == AnswerID.Id).FirstOrDefaultAsync();
-                if (checkAns is not null)
-                    return "U already choosed it";
-
                 var ques = await _context.answers
                     .Include(q => q.Questions)
                     .Where(q => q.Questionsid == answer.Questionsid)
@@ -226,11 +222,11 @@ namespace E_Exam.Services
                     ExamID = ExamID,
                 };
 
+                bool areEql = string.Equals(ques.Questions.correctAnswer, answer.Text, StringComparison.OrdinalIgnoreCase);
 
-                if (ques.Questions.correctAnswer == answer.Text)
-                {
-                    totalScore += ques.Questions.Score; 
-                }
+                if (areEql)                
+                    totalScore += ques.Questions.Score;
+                
                 _context.choosenAnswers.Add(choosen);
 
                 choosenAnswers.Add(choosen);
