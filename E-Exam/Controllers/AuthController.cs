@@ -18,7 +18,7 @@ namespace E_Exam.Controllers
         }
 
         [HttpGet("Colleges")]
-        public async Task<IActionResult> Faculties()
+        public async Task<IActionResult> Faculties() 
         {
             var faculties = await _authService.GetFaculties();
             return Ok(faculties);
