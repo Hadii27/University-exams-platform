@@ -17,13 +17,6 @@ namespace E_Exam.Controllers
             _authService = authService;
         }
 
-        [HttpGet("Roles")]
-        public async Task<IActionResult> Roles()
-        {
-            var roles = await _authService.GetRoles();
-            return Ok(roles);
-        }
-
         [HttpGet("Colleges")]
         public async Task<IActionResult> Faculties()
         {
@@ -31,8 +24,8 @@ namespace E_Exam.Controllers
             return Ok(faculties);
         }
 
-        [HttpPost("College{ReqCollegeID}/Department{ReqDepartmentID}/Rule{ReqRoleID}/Register")]
-        public async Task<IActionResult> RegisterAsync([FromBody]RequestRegisterDto Dto , int ReqCollegeID, string ReqRoleID, int ReqDepartmentID)
+        [HttpPost("Register")]
+        public async Task<IActionResult> RegisterAsync([FromBody]RequestRegisterDto Dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -46,13 +39,13 @@ namespace E_Exam.Controllers
                 Password = Dto.Password,
                 internationalID = Dto.internationalID,
                 Grade = Dto.Grade,
-                FaculityID = ReqCollegeID,
-                DepartmentID = ReqDepartmentID,
-                RoleID = ReqRoleID,
+                FaculityID = Dto.ReqCollegeID,
+                DepartmentID = Dto.ReqDepartmentID,
+                RoleID = Dto.Role,
                 Username = Dto.Username,
                 
             };
-            var result = await _authService.RegisterAsync(model, ReqCollegeID, ReqRoleID, ReqDepartmentID);
+            var result = await _authService.RegisterAsync(model, Dto.ReqCollegeID, Dto.Role, Dto.ReqDepartmentID);
             if (!result.isAuthenticated)            
                 return BadRequest(result.Message);
 
@@ -60,6 +53,34 @@ namespace E_Exam.Controllers
                 return BadRequest("International id is already exist");
             return Ok(result);
         }
+
+        [HttpPost("MasterRegister")]
+        public async Task<IActionResult> MasterRegisterAsync([FromBody] MasterRegisterDto Dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var model = new RegisterModel
+            {
+                FirstName = Dto.FirstName,
+                LastName = Dto.LastName,
+                Email = Dto.Email,
+                PhoneNumber = Dto.PhoneNumber,
+                Password = Dto.Password,
+                internationalID = Dto.internationalID,
+                Username = Dto.Username,
+
+            };
+
+            var result = await _authService.MasterRegister(model, Dto.masterID);
+            if (!result.isAuthenticated)
+                return BadRequest(result.Message);
+
+            if (result is null)
+                return BadRequest("International id is already exist");
+            return Ok(result);
+        }
+
 
         [HttpPost("Login")]
         public async Task<IActionResult> LoginAsync([FromBody] TokenRequestModel model)
@@ -72,13 +93,13 @@ namespace E_Exam.Controllers
             return Ok(result);
         }
 
-        [HttpPost("Requests/AddRole/User/{UserID}/Role/{RoleID}")]
+        [HttpPost("Requests/AddRole/User/Role")]
         [Authorize(Roles = "Master,Admin")]
-        public async Task<IActionResult> AddRoleAsync([FromRoute] string UserID, [FromRoute] string RoleID)
+        public async Task<IActionResult> AddRoleAsync(AddRoleDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.AddRole(UserID, RoleID);
+            var result = await _authService.AddRole(dto.UserID, dto.RoleName);
             if (!string.IsNullOrEmpty(result))
                 return BadRequest(result);
             return Ok(result);

@@ -37,13 +37,10 @@ namespace E_Exam.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
             var current = _adminServices.GetCurrentAdmin();
-
             if (dto.Name.IsNullOrEmpty() || dto.Description.IsNullOrEmpty())
                 return BadRequest("One or more required fields are missing.");
-            
-
+           
             var departments = await _adminServices.GetAllDepartments(current);
             if (departments.Any(d => d.Name == dto.Name))
                 return BadRequest("This department is already exist");

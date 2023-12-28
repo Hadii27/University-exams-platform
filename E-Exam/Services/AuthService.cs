@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.WebSockets;
@@ -54,7 +55,7 @@ namespace E_Exam.Services
         //    return result;
         //}
 
-        public async Task<AuthModel> RegisterAsync(RegisterModel model, int CollegeID, string RoleID, int DepartmentID)
+        public async Task<AuthModel> RegisterAsync(RegisterModel model, int CollegeID, string Role, int DepartmentID)
         {
             if (await _userManager.FindByEmailAsync(model.Email) is not null)
                 return new AuthModel { Message = "Email Is Already Exist" };
@@ -65,9 +66,13 @@ namespace E_Exam.Services
             if (checkID is not null)
                 return null;
 
-            var role = await _context.Roles.FindAsync(RoleID);
+            var role = await _context.Roles
+                .Where(r => r.Name == Role)
+                .FirstOrDefaultAsync();
+
             if (role == null)
-                return null;
+                return new AuthModel { Message = "Invalid Role" };
+            
 
             var faculity = await _context.faculties.FindAsync(CollegeID);
             if (faculity == null)
@@ -139,6 +144,59 @@ namespace E_Exam.Services
             };
         }
 
+        public async Task<AuthModel> MasterRegister(RegisterModel model, string MasterID)
+        {
+            if (MasterID != "Hsa5olawd3qweaklsdeed648saw#2@")
+                return new AuthModel { Message = "Invalid Master ID" };
+
+            if (await _userManager.FindByEmailAsync(model.Email) is not null)
+                return new AuthModel { Message = "Email Is Already Exist" };
+            if (await _userManager.FindByNameAsync(model.Username) is not null)
+                return new AuthModel { Message = "Username Is already exist" };
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                InternationalID = model.internationalID,
+                RequestedRole = "Master",
+
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            await _userManager.AddToRoleAsync(user, "Master");
+
+            if (!result.Succeeded)
+            {
+                string errors = string.Empty;
+                foreach (var error in result.Errors)
+                {
+                    errors += $"{error.Description}, ";
+                }
+                return new AuthModel { Message = errors };
+            }
+            var jwtSecurityToken = await CreateJwtTokenAsync(user);
+
+            return new AuthModel
+            {
+
+                ExpireOn = jwtSecurityToken.ValidTo,
+                isAuthenticated = true,
+                Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken),
+                UserData = new UserDataModel
+                {
+                    Username = model.Username,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    UserId = user.Id,
+                    Roles = new List<string> { "" },
+                }
+            };
+        }
+
         public async Task<AuthModel> GetToken(TokenRequestModel model)
         {
             var authModel = new AuthModel();
@@ -176,7 +234,7 @@ namespace E_Exam.Services
             return authModel;
         }
 
-        public async Task<string> AddRole(string UserID, string RoleID)
+        public async Task<string> AddRole(string UserID, string RoleName)
         {
             var currentUserID = GetCurrentUser();
             if (currentUserID == null)            
@@ -184,7 +242,9 @@ namespace E_Exam.Services
             
             var user = await _userManager.FindByIdAsync(UserID);
             var CheckMasterRole = await _context.UserRoles.Where(r => r.UserId == currentUserID && r.RoleId == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b").FirstOrDefaultAsync();
-            var checkRole = await _context.Roles.FindAsync(RoleID);
+            var checkRole = await _context.Roles
+                .Where (r => r.Name == RoleName)
+                .FirstOrDefaultAsync();
             if (checkRole == null)
             {
                 return "Invalid role id";
@@ -192,7 +252,7 @@ namespace E_Exam.Services
 
             if (CheckMasterRole == null)
             {
-                if (RoleID == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b" || RoleID == "e308bc06-17e7-4b98-8ae5-a4cb16e111b8")
+                if (checkRole.Id == "6e99b4dd-1ffa-4cd5-8536-c18f5be7476b" || checkRole.Id == "e308bc06-17e7-4b98-8ae5-a4cb16e111b8")
                     return "You cannot Assign This Roles";
             }
 
